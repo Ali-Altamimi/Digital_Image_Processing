@@ -25,20 +25,21 @@ def read_raw_files(file_name):
 def write_raw_files(matrix):
     # w = np.matrix(two_d_array)
     f = open('my_file.raw', 'wb')
-    binary_format = bytearray(matrix)
-    f.write(binary_format)
+
+    z = matrix.astype('uint8')
+
+    f.write(z)
     f.close()
 
 
 
 def subtrac_two_imgs(img1, img2):
-    # result = [[0 for row in range(x)] for column in range(y)]
-    result = np.subtract(img1, img2)
-    # for i in range(x):
-    #     for j in range(y):
-    #         result[i][j] = int(img1[i][j]) - int(img2[i][j])
+    result = [[0 for row in range(x)] for column in range(y)]
+    for i in range(x):
+        for j in range(y):
+            result[i][j] = int(img1[i][j]) - int(img2[i][j])
 
-    return np.matrix(img1)
+    return np.matrix(result)
 
 img1 = read_raw_files(lena)
 img2 = read_raw_files(lena_edit)
