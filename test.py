@@ -1,5 +1,6 @@
 import binascii
 import numpy as np
+import math
 x = 512
 y = 512
 
@@ -19,18 +20,17 @@ def read_raw_files(file_name):
             for j in range(y):
                 t[i][j] = list_data[counter]
                 counter = counter + 1
-    return np.array(t, dtype="i4")
+    return np.array(t, dtype="uint8")
 
 
-def write_raw_files(matrix):
+def write_raw_files(matrix, filename):
     # w = np.matrix(two_d_array)
-    f = open('my_file.raw', 'wb')
+    f = open(filename + '.raw', 'wb')
 
     z = matrix.astype('uint8')
 
     f.write(z)
     f.close()
-
 
 
 def subtrac_two_imgs(img1, img2):
@@ -41,8 +41,23 @@ def subtrac_two_imgs(img1, img2):
 
     return np.matrix(result)
 
+
 img1 = read_raw_files(lena)
 img2 = read_raw_files(lena_edit)
 result = subtrac_two_imgs(img1, img2)
+write_raw_files(result, "sub_img")
 
-write_raw_files(result)
+
+def inverse(img1):
+    result = [[0 for row in range(x)] for column in range(y)]
+    for i in range(x):
+        for j in range(y):
+            result[i][j] = 255 - int(img1[i][j])
+
+    return np.matrix(result)
+
+
+inverse_img = inverse(img1)
+write_raw_files(inverse_img, "inv_img")
+
+write_raw_files(img1, "test_lena")
