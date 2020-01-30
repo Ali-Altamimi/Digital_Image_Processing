@@ -1,11 +1,10 @@
-import binascii
 import numpy as np
-import math
+
 x = 512
 y = 512
 
-lena = "lena.raw"
-lena_edit = "lena_edit.raw"
+lena = "sources\lena.raw"
+lena_edit = "sources\lena_edit.raw"
 
 
 def read_raw_files(file_name):
@@ -20,16 +19,16 @@ def read_raw_files(file_name):
             for j in range(y):
                 t[i][j] = list_data[counter]
                 counter = counter + 1
-    return np.array(t, dtype="uint8")
+    return t
 
 
 def write_raw_files(matrix, filename):
-    # w = np.matrix(two_d_array)
     f = open(filename + '.raw', 'wb')
 
-    z = matrix.astype('uint8')
+    # z = casted_matrix.astype('uint8nt8')
+    casted_matrix = np.matrix(matrix).astype('uint8')
 
-    f.write(z)
+    f.write(casted_matrix)
     f.close()
 
 
@@ -39,13 +38,7 @@ def subtrac_two_imgs(img1, img2):
         for j in range(y):
             result[i][j] = int(img1[i][j]) - int(img2[i][j])
 
-    return np.matrix(result)
-
-
-img1 = read_raw_files(lena)
-img2 = read_raw_files(lena_edit)
-result = subtrac_two_imgs(img1, img2)
-write_raw_files(result, "sub_img")
+    return result
 
 
 def inverse(img1):
@@ -54,10 +47,25 @@ def inverse(img1):
         for j in range(y):
             result[i][j] = 255 - int(img1[i][j])
 
-    return np.matrix(result)
+    return result
 
+
+def translation(img, move):
+    result = [[0 for row in range(x)] for column in range(y)]
+    for i in range(x):
+        for j in range(y):
+            if ((i + move + 1) <= x and ((j + move + 1) <= y)):
+                result[i + move][j + move] = img[i][j]
+    return result
+
+
+img1 = read_raw_files(lena)
+img2 = read_raw_files(lena_edit)
+result = subtrac_two_imgs(img1, img2)
+write_raw_files(result, "lena_subtraction")
 
 inverse_img = inverse(img1)
-write_raw_files(inverse_img, "inv_img")
+write_raw_files(inverse_img, "lena_negative")
 
-write_raw_files(img1, "test_lena")
+trans_img = translation(img1, 5)
+write_raw_files(trans_img, "lena_translation")
