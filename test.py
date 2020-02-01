@@ -25,7 +25,6 @@ def read_raw_files(file_name):
 def write_raw_files(matrix, filename):
     f = open(filename + '.raw', 'wb')
 
-    # z = casted_matrix.astype('uint8nt8')
     casted_matrix = np.matrix(matrix).astype('uint8')
 
     f.write(casted_matrix)
