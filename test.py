@@ -1,10 +1,9 @@
 import numpy as np
-
 x = 512
 y = 512
 
-lena = "sources\lena.raw"
-lena_edit = "sources\lena_edit.raw"
+lena = "sources/lena.raw"
+lena_edit = "sources/lena_edit.raw"
 
 
 def read_raw_files(file_name):
