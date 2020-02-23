@@ -1,4 +1,4 @@
-import io
+from my_io import io
 
 
 class Subtract:

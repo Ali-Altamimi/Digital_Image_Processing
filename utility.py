@@ -4,6 +4,17 @@ from subtract import Subtract as sub
 
 
 class utility:
+    def is_same_pic(img1, img2, dimensions):
+        for i in range(dimensions[0]):
+            for j in range(dimensions[1]):
+                if (int(img1[i][j]) != int(img2[i][j])):
+                    print("Different values:"
+                          + "\ni = " + str(i)
+                          + "\nj = " + str(j)
+                          + "\n\nimg1 value is " + str(img1[i][j])
+                          + "\nimg2 value is " + str(img2[i][j]))
+                    return False;
+        return True;
 
     def inverse(path1, dimensions, output_name):
         img1 = io.read(path1, dimensions)
@@ -98,7 +109,11 @@ class utility:
             for j in range(dimensions[1]):
                 for x in range(3):
                     for y in range(3):
-                        temp += float(new_img1[i + 3+x-1][j + 3+y-1]) * kernel[x][y]
+                        temp += float(new_img1[i + 3 + x - 1][j + 3 + y - 1]) * kernel[x][y]
                 result[i][j] = int(temp / 9)
                 temp = 0
+
+        result = sub.Subtract.add_two_matrices(img1, result, dimensions)
+        # x = utility.is_same_pic(img1, result, dimensions)
+        # print(x)
         return result
