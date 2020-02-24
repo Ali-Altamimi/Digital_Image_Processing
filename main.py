@@ -1,5 +1,5 @@
 from my_io import io
-from utility import utility
+from utility import Utility
 from subtract import Subtract as sub
 import math
 dimensions = [512, 512]
@@ -12,9 +12,9 @@ lena_edit = "input\lena_edit.raw"
 # inverse_img = utility.inverse(lena, dimensions, "lena_negative")
 #
 # trans_img = utility.translation(lena, 5, dimensions, "lena_translation")
-# utility.histogram(lena, dimensions, "lena_histequal")
+Utility.histogram(lena, dimensions, "lena_histequal")
 #
-# x = io.write(utility.smooth(lena, dimensions), "lena_smooth")
-# utility.unsharp(io.read(lena, dimensions), utility.smooth(lena, dimensions), dimensions)
+x = io.write(Utility.smooth(lena, dimensions), "lena_smooth")
+Utility.unsharp(io.read(lena, dimensions), Utility.smooth(lena, dimensions), dimensions)
 
-io.write(utility.sharpening(lena, dimensions), "lena_sharpening")
+io.write(Utility.sharpening(lena, dimensions), "lena_sharpening")

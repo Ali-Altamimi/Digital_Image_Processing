@@ -3,7 +3,7 @@ import math
 from subtract import Subtract as sub
 
 
-class utility:
+class Utility:
     def is_same_pic(img1, img2, dimensions):
         for i in range(dimensions[0]):
             for j in range(dimensions[1]):
@@ -13,8 +13,39 @@ class utility:
                           + "\nj = " + str(j)
                           + "\n\nimg1 value is " + str(img1[i][j])
                           + "\nimg2 value is " + str(img2[i][j]))
-                    return False;
-        return True;
+                    return False
+        return True
+
+    def is_out_off_range(img1, dimensions):
+        for i in range(dimensions[0]):
+            for j in range(dimensions[1]):
+                if (int(img1[i][j]) > 255 or img1[i][j] < 0):
+                    print("Out of range values:"
+                          + "\ni = " + str(i)
+                          + "\nj = " + str(j)
+                          + "\n\nimg1 value is " + str(img1[i][j]))
+                    return False
+        return True
+
+    def find_value_of_out_range(img1, dimensions):
+        min = 10000
+        max = -1000
+        for i in range(dimensions[0]):
+            for j in range(dimensions[1]):
+                if (int(img1[i][j] > max)):
+                    max = img1[i][j]
+                if (int(img1[i][j]) < min):
+                    min = img1[i][j]
+        print("Min is : " + str(min) +
+              "\nMax is : " + str(max))
+
+    def normalize(img1, dimensions):
+        result = [[0 for row in range(dimensions[0])] for column in range(dimensions[1])]
+        for i in range(dimensions[0]):
+            for j in range(dimensions[1]):
+                result[i][j] = img1[i][j] + 255
+
+        return result
 
     def inverse(path1, dimensions, output_name):
         img1 = io.read(path1, dimensions)
@@ -67,27 +98,61 @@ class utility:
 
         io.write(result, output_name)
 
-    def smooth(path1, dimensions):
-        new_dimensions = [522, 522]
-        img1 = io.read2(path1, 10, new_dimensions)
-        new_img1 = utility.translation2(img1, 5, new_dimensions)
+    def histogram2(img1, dimensions):
+        intensities = [0 for row in range(255)]
+        probability = [0 for row in range(255)]
+        cumulative_probability = [0 for row in range(255)]
         result = [[0 for row in range(dimensions[0])] for column in range(dimensions[1])]
-        temp = 0
-        sigma = 2
-        K = 1.67
-        kernel = [[0 for row in range(5)] for column in range(5)]
-
-        for i in range(5):
-            for j in range(5):
-                kernel[i][j] = K * math.exp(-((i * i) + (j * j)) / (2 * sigma * sigma))
+        # building the intensity array (un-normalized histogram).
+        for i in range(dimensions[0]):
+            for j in range(dimensions[1]):
+                x = int(img1[i][j])
+                intensities[x] = intensities[x] + 1
+        # normalized histogram
+        for i in range(255):
+            x = int(intensities[i])
+            probability[i] = float(x / ((dimensions[0] * dimensions[1]) - 1))
+        for i in range(255):
+            cumulative_probability[i] = cumulative_probability[i - 1] + probability[i]
 
         for i in range(dimensions[0]):
             for j in range(dimensions[1]):
+                x = int(img1[i][j])
+
+                result[i][j] = int(float(cumulative_probability[x]) * 255)
+
+        return result
+
+    def smooth(path1, dimensions):
+        new_dimensions = [522, 522]
+        img1 = io.read2(path1, 10, new_dimensions)
+        new_img1 = Utility.translation2(img1, 5, new_dimensions)
+        result = [[0 for row in range(dimensions[0])] for column in range(dimensions[1])]
+        sigma = 2
+        K = 1.67
+        # kernel = [[0 for row in range(5)] for column in range(5)]
+        kernel = [[0, 1, 2, 1, 0],
+                  [1, 3, 5, 3, 1],
+                  [2, 5, 9, 5, 2],
+                  [1, 3, 5, 3, 1],
+                  [0, 1, 2, 1, 0]]
+
+        for i in range(5):
+            for j in range(5):
+                kernel[i][j] = K * math.exp(-(math.pow(i, 2) + math.pow(j, 2)) / (2 * math.pow(sigma, 2)))
+
+        for i in range(dimensions[0]):
+            for j in range(dimensions[1]):
+                temp = 0
                 for x in range(5):
                     for y in range(5):
-                        temp += float(new_img1[i + 5][j + 5]) * kernel[x][y]
+                        temp += float(new_img1[i + x][j + y]) * kernel[x][y]
                 result[i][j] = int(temp / 25)
-                temp = 0
+
+        # x = utility.histogram(result, dimensions)
+        x = Utility.is_same_pic(new_img1, result, dimensions)
+        Utility.find_value_of_out_range(result, dimensions)
+
         return result
 
     def unsharp(img1, img2, dimensions):
@@ -98,22 +163,24 @@ class utility:
     def sharpening(path1, dimensions):
         new_dimensions = [518, 518]
         img1 = io.read2(path1, 6, new_dimensions)
-        new_img1 = utility.translation2(img1, 5, new_dimensions)
+        new_img1 = Utility.translation2(img1, 5, new_dimensions)
         result = [[0 for row in range(dimensions[0])] for column in range(dimensions[1])]
-        temp = 0
-        sigma = 2
-        K = 1.67
+
         kernel = [[0, 1, 0], [1, -4, 1], [0, 1, 0]]
 
         for i in range(dimensions[0]):
             for j in range(dimensions[1]):
+                temp = 0
                 for x in range(3):
                     for y in range(3):
                         temp += float(new_img1[i + 3 + x - 1][j + 3 + y - 1]) * kernel[x][y]
                 result[i][j] = int(temp / 9)
-                temp = 0
 
-        result = sub.Subtract.add_two_matrices(img1, result, dimensions)
+        result = sub.Subtract.sub_two_matrices(result, img1, dimensions)
+        result = Utility.normalize(result, dimensions)
+
+        x = Utility.is_out_off_range(result, dimensions)
+        Utility.find_value_of_out_range(result, dimensions)
         # x = utility.is_same_pic(img1, result, dimensions)
         # print(x)
         return result
