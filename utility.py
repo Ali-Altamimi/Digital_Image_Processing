@@ -83,19 +83,17 @@ class Utility:
             for j in range(dimensions[1]):
                 x = int(img1[i][j])
                 intensities[x] = intensities[x] + 1
-        # normalized histogram
+        # Finding the probability of having the intensity in the whole image
         for i in range(255):
-            x = int(intensities[i])
-            probability[i] = float(x / ((dimensions[0] * dimensions[1]) - 1))
+            intensity = int(intensities[i])
+            probability[i] = float(intensity / ((dimensions[0] * dimensions[1]) - 1))
         for i in range(255):
             cumulative_probability[i] = cumulative_probability[i - 1] + probability[i]
-
+        # Equalizing the image
         for i in range(dimensions[0]):
             for j in range(dimensions[1]):
-                x = int(img1[i][j])
-
-                result[i][j] = int(float(cumulative_probability[x]) * 255)
-
+                pixel_intensity = int(img1[i][j])
+                result[i][j] = int(float(cumulative_probability[pixel_intensity]) * 255)
         io.write(result, output_name)
 
     def histogram2(img1, dimensions):
@@ -130,16 +128,16 @@ class Utility:
         result = [[0 for row in range(dimensions[0])] for column in range(dimensions[1])]
         sigma = 2
         K = 1.67
-        # kernel = [[0 for row in range(5)] for column in range(5)]
-        kernel = [[0, 1, 2, 1, 0],
-                  [1, 3, 5, 3, 1],
-                  [2, 5, 9, 5, 2],
-                  [1, 3, 5, 3, 1],
-                  [0, 1, 2, 1, 0]]
+        kernel = [[0 for row in range(5)] for column in range(5)]
+        # kernel = [[0, 1, 2, 1, 0],
+        #           [1, 3, 5, 3, 1],
+        #           [2, 5, 9, 5, 2],
+        #           [1, 3, 5, 3, 1],
+        #           [0, 1, 2, 1, 0]]
 
         for i in range(5):
             for j in range(5):
-                kernel[i][j] = K * math.exp(-(math.pow(i, 2) + math.pow(j, 2)) / (2 * math.pow(sigma, 2)))
+                kernel[i][j] = K * math.exp(-(math.pow(i - 2, 2) + math.pow(j - 2, 2)) / (2 * math.pow(sigma, 2)))
 
         for i in range(dimensions[0]):
             for j in range(dimensions[1]):
@@ -150,14 +148,45 @@ class Utility:
                 result[i][j] = int(temp / 25)
 
         # x = utility.histogram(result, dimensions)
-        x = Utility.is_same_pic(new_img1, result, dimensions)
-        Utility.find_value_of_out_range(result, dimensions)
+        # x = Utility.is_same_pic(new_img1, result, dimensions)
+        # Utility.find_value_of_out_range(result, dimensions)
 
         return result
 
     def unsharp(img1, img2, dimensions):
-        x = sub.Subtract.sub_two_matrices(img2, img1, dimensions)
-        result = sub.Subtract.add_two_matrices(img1, x, dimensions)
+        result = sub.Subtract.sub_two_matrices(img1, img2, dimensions)
+        # x = Utility.is_out_off_range(result, dimensions)
+        Utility.find_value_of_out_range(result, dimensions)
+
+        # you have signed integers, you can't have that . -183 is not a valid pixel number .... i think
+        # true so do i add 183?
+        # I don't think so. The problem is that when you go above 255 you have an integer overflow.... thats bad.. you have to do everything in integers and then divide by the size of the kernel and then turn it into' \
+        #      'byte 0-255'
+        Utility.find_value_of_out_range(result, dimensions)
+
+        result = sub.Subtract.add_two_matrices(img1, result, dimensions)
+        min = 10000
+        max = -1000
+        for i in range(dimensions[0]):
+            for j in range(dimensions[1]):
+                if (int(img1[i][j]) > max):
+                    max = int(img1[i][j])
+                if (int(img1[i][j]) < min):
+                    min = int(img1[i][j])
+        for i in range(dimensions[0]):
+            for j in range(dimensions[1]):
+                result[i][j] = result[i][j] - (min)
+        for i in range(dimensions[0]):
+            for j in range(dimensions[1]):
+                result[i][j] = (result[i][j] / max)
+        for i in range(dimensions[0]):
+            for j in range(dimensions[1]):
+                result[i][j] = int(result[i][j] * 255)
+        # for i in range(dimensions[0]):
+        #     for j in range(dimensions[1]):
+        #             result[i][j] = result[i][j]& 0xff
+        # x = Utility.is_out_off_range(result, dimensions)
+        Utility.find_value_of_out_range(result, dimensions)
         io.write(result, "lenda_unsharpmask")
 
     def sharpening(path1, dimensions):
@@ -176,11 +205,11 @@ class Utility:
                         temp += float(new_img1[i + 3 + x - 1][j + 3 + y - 1]) * kernel[x][y]
                 result[i][j] = int(temp / 9)
 
-        result = sub.Subtract.sub_two_matrices(result, img1, dimensions)
-        result = Utility.normalize(result, dimensions)
+        result = sub.Subtract.sub_two_matrices(img1, result, dimensions)
+        # result = Utility.normalize(result, dimensions)
 
         x = Utility.is_out_off_range(result, dimensions)
         Utility.find_value_of_out_range(result, dimensions)
-        # x = utility.is_same_pic(img1, result, dimensions)
+        # x = utility.is_same_pic(img1, reresult,sult, dimensions)
         # print(x)
         return result

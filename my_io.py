@@ -31,7 +31,7 @@ class io:
         return t
 
     def write(matrix, filename):
-        f = open("output\\" + filename + '.raw', 'wb')
+        f = open("output/" + filename + '.raw', 'wb')
         casted_matrix = np.matrix(matrix).astype('uint8')
         f.write(casted_matrix)
         f.close()
