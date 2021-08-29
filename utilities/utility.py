@@ -13,6 +13,9 @@ KS_15 = 15
 # color
 CL_WHITE = 255
 CL_BLACK = 0
+# Min and Max integers
+INT_MAX =9223372036854775807
+INT_MIN =-9223372036854775806
 
 def is_same_pic(img1, img2, dimensions):
     for i in range(dimensions[0]):
@@ -157,12 +160,11 @@ def histogram2(img1, dimensions):
 
 def increase_dimensions(image:Image, new_dimensions:list, move:int)->Image:
     result = [[0 for row in range(new_dimensions[0])] for column in range(new_dimensions[1])]
-    for i in range(image.dimensions[0] -10):
-        for j in range(image.dimensions[1]-10):
+    for i in range(image.dimensions[0]):
+        for j in range(image.dimensions[1]):
                 result[i][j] = image.matrix[i][j]
     result = Image(name=image.name,matrix=result, dimensions=new_dimensions)
-    result = translation(result, move, name_extention='')
-    return result
+    return translation(result, move, name_extention='')
 
 
 def smooth(image:Image, kernel_size:int=KS_5 , sigma:int=2, K:int=1.67):
@@ -187,8 +189,8 @@ def smooth(image:Image, kernel_size:int=KS_5 , sigma:int=2, K:int=1.67):
 def unsharp(image:Image, image2:Image):
     result = Subtract.sub_two_matrices(image, image2, image.dimensions)
     result = Subtract.add_two_matrices(image, result, image.dimensions)
-    min = 100000000
-    max = -100000000
+    min = INT_MAX
+    max = INT_MIN
     for i in range(image.dimensions[0]):
         for j in range(image.dimensions[1]):
             if int(result.matrix[i][j]) < min:
@@ -206,11 +208,8 @@ def unsharp(image:Image, image2:Image):
     for i in range(image.dimensions[0]):
         for j in range(image.dimensions[1]):
             result.matrix[i][j] = 255 * (result_min[i][j] / max)
-
-    # find_value_of_out_range(result)
-    # print(result.matrix)
-    result = Image(name=image.name +'_unsharpmask',matrix=result, dimensions=image.dimensions)
-    return result
+    
+    return Image(name=image.name +'_unsharpmask',matrix=result.matrix, dimensions=image.dimensions)
 
 
 def sharpening(path1, dimensions):
