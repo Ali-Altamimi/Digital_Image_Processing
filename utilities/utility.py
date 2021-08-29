@@ -211,24 +211,20 @@ def unsharp(image:Image, image2:Image):
     
     return Image(name=image.name +'_unsharpmask',matrix=result.matrix, dimensions=image.dimensions)
 
-
-def sharpening(path1, dimensions):
+def sharpening(image:Image):
     new_dimensions = [518, 518]
-    img1 = my_io.read2(path1, 6, new_dimensions)
-    new_img1 = translation2(img1, 5, new_dimensions)
-    result = [[0 for row in range(dimensions[0])] for column in range(dimensions[1])]
-
+    this_image = increase_dimensions(image,new_dimensions,3)
     kernel = [[0, 1, 0], [1, -4, 1], [0, 1, 0]]
+    result = [[0 for row in range(image.dimensions[0])] for column in range(image.dimensions[1])]
 
-    for i in range(dimensions[0]):
-        for j in range(dimensions[1]):
+    for i in range(image.dimensions[0]):
+        for j in range(image.dimensions[1]):
             temp = 0
             for x in range(3):
                 for y in range(3):
-                    temp += float(new_img1[i + 3 + x - 1][j + 3 + y - 1]) * kernel[x][y]
+                    temp += float(this_image.matrix[i + 3 + x - 1][j + 3 + y - 1]) * kernel[x][y]
             result[i][j] = int(temp / 9)
-
-    result = sub.Subtract.sub_two_matrices(img1, result, dimensions)
+    result = Subtract.sub_two_matrices(image, Image(name=image.name,dimensions=image.dimensions,matrix=result),name=image.name +'_sharpening')
     return result
 
 
