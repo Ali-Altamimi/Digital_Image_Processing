@@ -7,7 +7,7 @@ INT16 = 2
 UINT16 = 3
 
 def read(path, dimensions, n:int=0):
-    t = [[0 for row in range(dimensions[1])] for column in range(dimensions[0])]
+    t = [[0 for column in range(dimensions[0])] for row in range(dimensions[1])]
     with open(path, "r+b") as binary_file:
         # Read the whole file at once
         data = binary_file.read()
@@ -18,8 +18,7 @@ def read(path, dimensions, n:int=0):
                 x = i % dimensions[0]
                 y = int(i / dimensions[0])
                 cordenent = x + (y * dimensions[0])
-                # if cordenent < dimensions[0]
-                t[x][y] = int(list_data[cordenent])
+                t[y][x] = int(list_data[cordenent])
         else:
             counter = 0
             for i in range(dimensions[0] - n):

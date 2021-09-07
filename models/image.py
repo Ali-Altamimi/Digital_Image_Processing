@@ -24,10 +24,8 @@ class Image:
     
     def display(self, cmap='gray'):
         plt.figure()
-        rotated_img = ndimage.rotate(self.matrix[::-1], -90)
-        plt.imshow(rotated_img, cmap)
+        plt.imshow(self.matrix, cmap)
         plt.title(self.name)
-        # plt.xticks(rotation=90)
 
         plt.show()
 

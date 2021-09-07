@@ -90,23 +90,28 @@ def inverse(image:Image):
 
 
 def translation(image:Image, move:int , name_extention:str='_translation'):
-    result = [[0 for row in range(image.dimensions[0])] for column in range(image.dimensions[1])]
+    result = [[0 for column in range(image.dimensions[0])] for row in range(image.dimensions[1])]
+    print('Dimensions: '+str(image.dimensions), str([len(image.matrix[0]),len(image.matrix)])+'\n'+'move: '+ str(move))
     for i in range(image.dimensions[0]):
         for j in range(image.dimensions[1]):
             if ((i + move + 1) <= image.dimensions[0] and ((j + move + 1) <= image.dimensions[1])):
-                result[i + move][j + move] = image.matrix[i][j]
+                try:
+                    result[i + move][j + move] = image.matrix[i][j]
+                except(IndexError):
+                    print(i + move, j + move)
     result = Image(name=image.name +name_extention ,matrix=result, dimensions=image.dimensions)
     return result
 
 # >>>>>>>>>>>>>>>>>
-def translation2(img, move, dimensions):
-    result = [[0 for row in range(dimensions[1])] for column in range(dimensions[0])]
-    for i in range(dimensions[0]):
-        for j in range(dimensions[1]):
-            if ((i + move + 1) <= dimensions[0] and ((j + move + 1) <= dimensions[1])):
-                result[i + move][j + move] = img[i][j]
+def translation2(image:Image, move:int , name_extention:str='_translation'):
+    result = [[0 for column in range(image.dimensions[0])] for row in range(image.dimensions[1])]
+    print('Dimensions: '+str(image.dimensions), str([len(image.matrix[0]),len(image.matrix)])+'\n'+'move: '+ str(move))
+    for i in range(image.dimensions[0]):
+        for j in range(image.dimensions[1]):
+            if ((i + move + 1) <= len(result) and ((j + move + 1) <= len(result[0]))):
+                    result[i + move][j + move] = image.matrix[i][j]
+    result = Image(name=image.name +name_extention ,matrix=result, dimensions=[len(result), len(result[0])])
     return result
-
 
 def histogram(image:Image):
     intensities = [0 for row in range(255)]
@@ -157,14 +162,38 @@ def histogram2(img1, dimensions):
             result[i][j] = int(float(cumulative_probability[x]) * 255)
 
     return result
+def create_matrix(dimensions:list)->list:
+    print('creating new list: ' + str(dimensions))
+    return [[0 for column in range(dimensions[0])] for row in range(dimensions[1])]
+
+def copy_list(copy_from:list, copy_to:list)->list:
+    len_from_row = len(copy_from)
+    len_from_column= len(copy_from[0])
+    print('column: ' + str(len_from_column), 'row: '+ str(len_from_row))
+    for i in range(len_from_row):
+        for j in range(len_from_column):
+            try:
+                copy_to[i][j] = copy_from[i][j]
+            except(IndexError):
+                print(i, j)
+    return copy_to
+
 
 def increase_dimensions(image:Image, new_dimensions:list, move:int)->Image:
-    result = [[0 for row in range(new_dimensions[0])] for column in range(new_dimensions[1])]
-    for i in range(image.dimensions[0]):
-        for j in range(image.dimensions[1]):
-                result[i][j] = image.matrix[i][j]
-    result = Image(name=image.name,matrix=result, dimensions=new_dimensions)
+
+    new_matrix = create_matrix(new_dimensions)
+    copy_old_matrix_to_new_matrix = copy_list(image.matrix, new_matrix)
+    print(new_dimensions)
+    result = Image(name=image.name,matrix=copy_old_matrix_to_new_matrix, dimensions=new_dimensions)
     return translation(result, move, name_extention='')
+
+def increase_dimensions2(image:Image, new_dimensions:list, move:int)->Image:
+
+    new_matrix = create_matrix(new_dimensions)
+    copy_old_matrix_to_new_matrix = copy_list(image.matrix, new_matrix)
+    print(new_dimensions)
+    result = Image(name=image.name,matrix=copy_old_matrix_to_new_matrix, dimensions=new_dimensions)
+    return translation2(result, move, name_extention='')
 
 
 def smooth(image:Image, kernel_size:int=KS_5 , sigma:int=2, K:int=1.67):
@@ -239,41 +268,45 @@ def threshold(img, dimensions, threshold_point):
     return img
 
 
-def erosion(img):
-    result = [[0 for row in range(img.dimensions[1])] for column in range(img.dimensions[0])]
+def erosion(image:Image)->Image:
+    result = [[0 for row in range(image.dimensions[0])] for column in range(image.dimensions[1])]
+    newDimensions=[ image.dimensions[0]+2, image.dimensions[1]+2]
+
+    current_image = increase_dimensions2(image,newDimensions , 1)
     condtion = True
-    for i in range(1, img.dimensions[0]-2):
-        for j in range(1, img.dimensions[1]-2):
-            for x in range(-1, 2):
-                for y in range(-1, 2):
-                    if img.matrix[i-x][j-y] == "0":
+    for i in range(0, image.dimensions[0]):
+        for j in range(0, image.dimensions[1]):
+            for x in range(0, 3):
+                for y in range(0, 3):
+                    if current_image.matrix[i+x][j+y] == 0:
                         condtion = False
             if condtion:
                 result[i][j] = 255
             else:
                 result[i][j] = 0
-            condtion = True
-    return result
+            condtion = True 
+    return Image(name=image.name +'_erosion',matrix=result, dimensions=image.dimensions)
 
-def dilation(img):
-    result = [[0 for row in range(img.dimensions[1])] for column in range(img.dimensions[0])]
+def dilation(image:Image):
+    result = [[0 for row in range(image.dimensions[1])] for column in range(image.dimensions[0])]
     condtion = True
-    for i in range(1, img.dimensions[0]-2):
-        for j in range(1, img.dimensions[1]-2):
+    for i in range(1, image.dimensions[0]-2):
+        for j in range(1, image.dimensions[1]-2):
             for x in range(-1, 2):
                 for y in range(-1, 2):
-                    if img.matrix[i-x][j-y] == "255":
+                    if image.matrix[i-x][j-y] == 255:
                         condtion = False
             if condtion:
                 result[i][j] = 0
             else:
                 result[i][j] = 255
             condtion = True
-    return result
+    return Image(name=image.name +'_dilation',matrix=result, dimensions=image.dimensions)
 
-def boundaryExtraction(img):
-    new_matrix = erosion(img)
-    result = sub.sub_two_matrices(img.matrix, new_matrix,  img.dimensions)
+
+def boundaryExtraction(image:Image):
+    new_matrix = erosion(image)
+    result = Subtract.sub_two_matrices(image, new_matrix, name=image.name +'_boundary')
     return result
 
 
