@@ -1,3 +1,4 @@
+from os import error
 from utilities.subtract import Subtract
 from models.image import Image
 import utilities.io as io
@@ -104,14 +105,12 @@ def translation(image:Image, move:int , name_extention:str='_translation'):
 
 # >>>>>>>>>>>>>>>>>
 def translation2(image:Image, move:int , name_extention:str='_translation'):
-    result = [[0 for column in range(image.dimensions[0])] for row in range(image.dimensions[1])]
-    print('Dimensions: '+str(image.dimensions), str([len(image.matrix[0]),len(image.matrix)])+'\n'+'move: '+ str(move))
-    for i in range(image.dimensions[0]):
-        for j in range(image.dimensions[1]):
-            if ((i + move + 1) <= len(result) and ((j + move + 1) <= len(result[0]))):
+    result = [[0 for row in range(image.dimensions[0])] for column in range(image.dimensions[1])]
+    for i in range(image.dimensions[1]):
+        for j in range(image.dimensions[0]):
+            if ((i + move) < len(result) and ((j + move) < len(result[0]))):
                     result[i + move][j + move] = image.matrix[i][j]
-    result = Image(name=image.name +name_extention ,matrix=result, dimensions=[len(result), len(result[0])])
-    return result
+    return Image(name=image.name +name_extention ,matrix=result, dimensions=[len(result), len(result[0])])
 
 def histogram(image:Image):
     intensities = [0 for row in range(255)]
@@ -163,19 +162,12 @@ def histogram2(img1, dimensions):
 
     return result
 def create_matrix(dimensions:list)->list:
-    print('creating new list: ' + str(dimensions))
-    return [[0 for column in range(dimensions[0])] for row in range(dimensions[1])]
+    return [[0 for row in range(dimensions[0])] for column in range(dimensions[1])]
 
 def copy_list(copy_from:list, copy_to:list)->list:
-    len_from_row = len(copy_from)
-    len_from_column= len(copy_from[0])
-    print('column: ' + str(len_from_column), 'row: '+ str(len_from_row))
-    for i in range(len_from_row):
-        for j in range(len_from_column):
-            try:
-                copy_to[i][j] = copy_from[i][j]
-            except(IndexError):
-                print(i, j)
+    for i in range(len(copy_from)):
+        for j in range(len(copy_from[0])):
+            copy_to[i][j] = copy_from[i][j]
     return copy_to
 
 
@@ -188,7 +180,6 @@ def increase_dimensions(image:Image, new_dimensions:list, move:int)->Image:
     return translation(result, move, name_extention='')
 
 def increase_dimensions2(image:Image, new_dimensions:list, move:int)->Image:
-
     new_matrix = create_matrix(new_dimensions)
     copy_old_matrix_to_new_matrix = copy_list(image.matrix, new_matrix)
     print(new_dimensions)
@@ -267,45 +258,63 @@ def threshold(img, dimensions, threshold_point):
 
     return img
 
+def check_dimintion(image:Image, image2:Image):
+    if (image.dimensions) == (image2.dimensions):
+        print('They both have the same dimensions\n')
+        print('Rows: ' + str(image.dimensions[0]))
+        print('Columns: ' + str(image.dimensions[1]))
+    else:
+        print('They have different dimensions\n')
+        print('Rows image1: ' + str(image.dimensions[0])+ ', Rows image2: ' + str(image2.dimensions[0]))
+        print('Columns image1: ' + str(image.dimensions[1])+ ', Columns image2: ' + str(image2.dimensions[1]))
+    print('')
+    if image.matrix == image2.matrix:
+        print('They both have the same matrix size\n')
+        print('Rows: ' + len(image.matrix[0]))
+        print('Columns: ' + len(image.matrix[1]))
 
 def erosion(image:Image)->Image:
     result = [[0 for row in range(image.dimensions[0])] for column in range(image.dimensions[1])]
-    newDimensions=[ image.dimensions[0]+2, image.dimensions[1]+2]
-
-    current_image = increase_dimensions2(image,newDimensions , 1)
+    new_image_with_bigger_dim = increase_dimensions2(image,[image.dimensions[0]+2, image.dimensions[1]+2] , 1)
+    new_image_with_bigger_dim.display()
     condtion = True
-    for i in range(0, image.dimensions[0]):
-        for j in range(0, image.dimensions[1]):
-            for x in range(0, 3):
-                for y in range(0, 3):
-                    if current_image.matrix[i+x][j+y] == 0:
+    for i in range(0, new_image_with_bigger_dim.dimensions[0]-2):
+        for j in range(0, new_image_with_bigger_dim.dimensions[1]-2):
+            for x in range(0, 2):
+                for y in range(0, 2):
+                    if new_image_with_bigger_dim.matrix[i+x][j+y] == 0:
                         condtion = False
-            if condtion:
-                result[i][j] = 255
-            else:
-                result[i][j] = 0
+                    if condtion:
+                        result[i][j] = 255
+                    else:
+#                         print(new_image_with_bigger_dim.matrix[i+x][j+y])
+                        result[i][j] = 0
             condtion = True 
     return Image(name=image.name +'_erosion',matrix=result, dimensions=image.dimensions)
 
 def dilation(image:Image):
-    result = [[0 for row in range(image.dimensions[1])] for column in range(image.dimensions[0])]
+    result = [[0 for row in range(image.dimensions[0])] for column in range(image.dimensions[1])]
+    new_image_with_bigger_dim = increase_dimensions2(image,[image.dimensions[0]+2, image.dimensions[1]+2] , 1)
+    new_image_with_bigger_dim.display()
     condtion = True
-    for i in range(1, image.dimensions[0]-2):
-        for j in range(1, image.dimensions[1]-2):
-            for x in range(-1, 2):
-                for y in range(-1, 2):
-                    if image.matrix[i-x][j-y] == 255:
+    for i in range(0, new_image_with_bigger_dim.dimensions[0]-2):
+        for j in range(0, new_image_with_bigger_dim.dimensions[1]-2):
+            for x in range(0, 2):
+                for y in range(0, 2):
+                    if new_image_with_bigger_dim.matrix[i+x][j+y] == 255:
                         condtion = False
-            if condtion:
-                result[i][j] = 0
-            else:
-                result[i][j] = 255
-            condtion = True
-    return Image(name=image.name +'_dilation',matrix=result, dimensions=image.dimensions)
+                    if condtion:
+                        result[i][j] = 0
+                    else:
+#                         print(new_image_with_bigger_dim.matrix[i+x][j+y])
+                        result[i][j] = 255
+            condtion = True 
+    return Image(name=image.name +'_erosion',matrix=result, dimensions=image.dimensions)
 
 
 def boundaryExtraction(image:Image):
     new_matrix = erosion(image)
+    new_matrix.display()
     result = Subtract.sub_two_matrices(image, new_matrix, name=image.name +'_boundary')
     return result
 
